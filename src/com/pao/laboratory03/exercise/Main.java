@@ -107,7 +107,7 @@ public class Main {
                     case "2":
                         System.out.print("Nume student: ");
                         String studentName = scanner.nextLine().trim();
-                        System.out.print("Materie (" + /* TODO: afișează Subject.values() */ "PAOJ, BD, SO, RC" + "): ");
+                        // System.out.print("Materie (" + /* TODO: afișează Subject.values() */ "PAOJ, BD, SO, RC" + "): ");
                         System.out.print("Materie " + Arrays.toString(Subject.values()) + ": ");
                         String subjectStr = scanner.nextLine().trim().toUpperCase();
                         System.out.print("Nota (1-10): ");
