@@ -1,0 +1,43 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Compile Project",
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-Command",
+                "javac -d output -cp 'lib/java-diff-utils-4.15.jar' (Get-ChildItem -Recurse -Filter *.java -Path src).FullName"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "group": "build",
+            "presentation": {
+                "reveal": "silent"
+            },
+            "problemMatcher": [
+                "$javac"
+            ]
+        },
+        {
+            "label": "Run Checker",
+            "type": "shell",
+            "command": "java",
+            "args": [
+                "-cp",
+                "output;lib/java-diff-utils-4.15.jar",
+                "com.pao.laboratory07.exercise1.Checker"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "group": "test",
+            "presentation": {
+                "reveal": "always"
+            },
+            "dependsOn": ["Compile Project"],
+            "problemMatcher": []
+        }
+    ]
+}
