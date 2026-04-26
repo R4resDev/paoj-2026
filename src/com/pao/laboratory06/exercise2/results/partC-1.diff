@@ -1,0 +1,11 @@
+--- expected
++++ actual
+@@ -1,6 +1,6 @@
+-CIM: Bonus Test, venit net anual: 72600.00 lei
++CIM: Bonus Test, venit net anual: 72600.0 lei
+ 
+-Colaborator cu venit net maxim: CIM: Bonus Test, venit net anual: 72600.00 lei
++Colaborator cu venit net maxim: CIM: Bonus Test, venit net anual: 72600.0 lei
+ 
+ Colaboratori persoane juridice:
+ 

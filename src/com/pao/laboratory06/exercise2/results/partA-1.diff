@@ -1,0 +1,10 @@
+--- expected
++++ actual
+@@ -1,5 +1,5 @@
+-CIM: Popescu Ana, venit net anual: 58080.00 lei
+-CIM: Ionescu Vlad, venit net anual: 46200.00 lei
++CIM: Popescu Ana, venit net anual: 58080.000000000015 lei
++CIM: Ionescu Vlad, venit net anual: 46200.00000000001 lei
+ PFA: Georgescu Maria, venit net anual: 78840.00 lei
+ PFA: Enache Paul, venit net anual: 8640.00 lei
+ SRL: SRLTech SRL, venit net anual: 120960.00 lei
