@@ -8,7 +8,7 @@ import java.nio.ByteOrder;
 import java.util.*;
 
 public class Main {
-    private static final String OUTPUT_FILE = "output/lab09_ex2.bin";
+    private static final String OUTPUT_FILE = "src/com/pao/laboratory09/exercise2/lab09_ex2.bin";
     private static final int RECORD_SIZE = 32;
 
     public static void main(String[] args) throws Exception {
@@ -31,6 +31,86 @@ public class Main {
         // Format linie output:
         //   [idx] id=<id> data=<data> tip=<CREDIT|DEBIT> suma=<suma:.2f> RON status=<STATUS>
 
-        System.out.println("TODO: implementează exercițiul 2");
+        Scanner scanner = new Scanner(System.in);
+        int n = scanner.nextInt();
+
+        try (DataOutputStream dos = new DataOutputStream(new FileOutputStream(OUTPUT_FILE))) {
+            for (int i = 0; i < n; i++) {
+                int id = scanner.nextInt();
+                double suma = scanner.nextDouble();
+                String data = scanner.next();
+                TipTranzactie tip = TipTranzactie.valueOf(scanner.next().toUpperCase());
+
+                dos.write(ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN).putInt(id).array());
+                dos.write(ByteBuffer.allocate(8).order(ByteOrder.LITTLE_ENDIAN).putDouble(suma).array());
+                dos.write(String.format("%-10s", data).getBytes());
+                
+                if (tip == TipTranzactie.CREDIT) {
+                    dos.writeByte(0);
+                } else {
+                    dos.writeByte(1);
+                }
+                
+                dos.writeByte(0);
+                dos.write(new byte[8]);
+            }
+        }
+
+        try (RandomAccessFile raf = new RandomAccessFile(OUTPUT_FILE, "rw")) {
+            while (scanner.hasNext()) {
+                String comanda = scanner.next();
+
+                if (comanda.equals("READ") || comanda.equals("PRINT_ALL")) {
+                    int start;
+                    int count;
+                    
+                    if (comanda.equals("READ")) {
+                        start = scanner.nextInt();
+                        count = 1;
+                    } else {
+                        start = 0;
+                        count = n;
+                    }
+
+                    for (int i = start; i < start + count; i++) {
+                        byte[] buffer = new byte[RECORD_SIZE];
+                        raf.seek((long) i * RECORD_SIZE);
+                        raf.readFully(buffer);
+
+                        ByteBuffer bb = ByteBuffer.wrap(buffer).order(ByteOrder.LITTLE_ENDIAN);
+                        int id = bb.getInt(0);
+                        double suma = bb.getDouble(4);
+                        String data = new String(buffer, 12, 10).trim();
+                        
+                        String tipStr;
+                        if (buffer[22] == 0) {
+                            tipStr = "CREDIT";
+                        } else {
+                            tipStr = "DEBIT";
+                        }
+                        
+                        String statusStr = new String[]{"PENDING", "PROCESSED", "REJECTED"}[buffer[23]];
+
+                        System.out.printf("[%d] id=%d data=%s tip=%s suma=%.2f RON status=%s\n", i, id, data, tipStr, suma, statusStr);
+                    }
+                } else if (comanda.equals("UPDATE")) {
+                    int idx = scanner.nextInt();
+                    String statusStr = scanner.next();
+                    
+                    int statusCode;
+                    if (statusStr.equals("PENDING")) {
+                        statusCode = 0;
+                    } else if (statusStr.equals("PROCESSED")) {
+                        statusCode = 1;
+                    } else {
+                        statusCode = 2;
+                    }
+
+                    raf.seek((long) idx * RECORD_SIZE + 23);
+                    raf.write(statusCode);
+                    System.out.println("Updated [" + idx + "]: " + statusStr);
+                }
+            }
+        }
     }
 }
