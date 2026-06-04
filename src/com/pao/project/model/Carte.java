@@ -7,6 +7,8 @@ public class Carte implements Comparable<Carte> {
     private Autor autor;
     private ISBN isbn;
     private boolean disponibila = true;
+    private int id;
+    private int autorId;
 
     public Carte(String titlu, Autor autor, ISBN isbn) {
         this.titlu = titlu;
@@ -36,6 +38,22 @@ public class Carte implements Comparable<Carte> {
 
     public void setIsbn(ISBN isbn) {
         this.isbn = isbn;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public int getAutorId() {
+        return autorId;
+    }
+
+    public void setAutorId(int autorId) {
+        this.autorId = autorId;
     }
 
     public boolean isDisponibila() {

@@ -2,18 +2,16 @@ package com.pao.project.service;
 
 import com.pao.project.exception.CititorNegasitException;
 import com.pao.project.model.Cititor;
+import com.pao.project.repository.CititorRepository;
 
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.sql.SQLException;
 import java.util.List;
-import java.util.Map;
 
 public class CititorService {
     private static CititorService instance;
-    private final Map<Integer, Cititor> cititori = new HashMap<>();
+    private final CititorRepository cititorRepository = new CititorRepository(); // Legătura cu DB
 
-    private CititorService() {
-    }
+    private CititorService() {}
 
     public static CititorService getInstance() {
         if (instance == null) {
@@ -23,31 +21,40 @@ public class CititorService {
     }
 
     public void adaugaCititor(Cititor cititor) {
-        cititori.put(cititor.getId(), cititor);
+        try {
+            cititorRepository.save(cititor);
+            AuditService.getInstance().logAction("adauga_cititor");
+        } catch (SQLException e) {
+            System.err.println("Eroare la adaugare cititor DB: " + e.getMessage());
+        }
     }
 
     public void stergeCititor(int id) {
-        cititori.remove(id);
+        try {
+            cititorRepository.delete(id);
+            AuditService.getInstance().logAction("sterge_cititor");
+        } catch (SQLException e) {
+            System.err.println("Eroare la stergere cititor DB: " + e.getMessage());
+        }
     }
 
     public Cititor cautaDupaId(int id) {
-        Cititor cititor = cititori.get(id);
-        if (cititor == null) {
-            throw new CititorNegasitException("Cititorul cu id=" + id + " nu a fost gasit");
+        AuditService.getInstance().logAction("cauta_cititor_dupa_id");
+        try {
+            return cititorRepository.findById(id)
+                    .orElseThrow(() -> new CititorNegasitException("Cititorul cu id=" + id + " nu a fost gasit in DB"));
+        } catch (SQLException e) {
+            throw new RuntimeException("Eroare DB", e);
         }
-        return cititor;
-    }
-
-    public Cititor cautaDupaNume(String nume) {
-        for (Cititor cititor : cititori.values()) {
-            if (cititor.getNume().equalsIgnoreCase(nume)) {
-                return cititor;
-            }
-        }
-        throw new CititorNegasitException("Cititorul cu numele " + nume + " nu a fost gasit");
     }
 
     public List<Cititor> listeazaCititori() {
-        return new ArrayList<>(cititori.values());
+        AuditService.getInstance().logAction("listeaza_cititori");
+        try {
+            return cititorRepository.findAll();
+        } catch (SQLException e) {
+            System.err.println("Eroare DB: " + e.getMessage());
+            return null;
+        }
     }
 }

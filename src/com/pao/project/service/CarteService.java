@@ -1,19 +1,17 @@
 package com.pao.project.service;
 
 import com.pao.project.model.Carte;
+import com.pao.project.repository.CarteRepository;
 
-import java.util.ArrayList;
+import java.sql.SQLException;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class CarteService {
     private static CarteService instance;
-    private final Map<String, Carte> carti = new HashMap<>();
+    private final CarteRepository carteRepository = new CarteRepository();
 
-    private CarteService() {
-    }
+    private CarteService() {}
 
     public static CarteService getInstance() {
         if (instance == null) {
@@ -23,31 +21,32 @@ public class CarteService {
     }
 
     public void adaugaCarte(Carte carte) {
-        carti.put(carte.getTitlu(), carte);
+        try {
+            carteRepository.save(carte);
+            AuditService.getInstance().logAction("adauga_carte");
+        } catch (SQLException e) {
+            System.err.println("Eroare la adaugare carte DB: " + e.getMessage());
+        }
     }
 
-    public void stergeCarte(String titlu) {
-        carti.remove(titlu);
-    }
-
-    public Carte cautaCarte(String titlu) {
-        return carti.get(titlu);
+    public void stergeCarte(int id) {
+        try {
+            carteRepository.delete(id);
+            AuditService.getInstance().logAction("sterge_carte");
+        } catch (SQLException e) {
+             System.err.println("Eroare la stergere carte DB: " + e.getMessage());
+        }
     }
 
     public List<Carte> listeazaCarti() {
-        List<Carte> lista = new ArrayList<>(carti.values());
-        Collections.sort(lista);
-        return lista;
-    }
-
-    public List<Carte> listeazaCartiDisponibile() {
-        List<Carte> lista = new ArrayList<>();
-        for (Carte carte : carti.values()) {
-            if (carte.isDisponibila()) {
-                lista.add(carte);
-            }
+        AuditService.getInstance().logAction("listeaza_carti");
+        try {
+            List<Carte> lista = carteRepository.findAll();
+            Collections.sort(lista);
+            return lista;
+        } catch (SQLException e) {
+            System.err.println("Eroare DB: " + e.getMessage());
+            return null;
         }
-        Collections.sort(lista);
-        return lista;
     }
 }

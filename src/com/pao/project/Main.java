@@ -1,93 +1,82 @@
 package com.pao.project;
 
-import com.pao.project.exception.CarteNedisponibilaException;
-import com.pao.project.exception.CititorNegasitException;
-import com.pao.project.model.*;
+import com.pao.project.model.Autor;
+import com.pao.project.model.Carte;
+import com.pao.project.model.Cititor;
+import com.pao.project.model.ISBN;
+import com.pao.project.repository.CarteRepository;
+import com.pao.project.repository.CititorRepository;
+import com.pao.project.service.AutorService;
 import com.pao.project.service.CarteService;
 import com.pao.project.service.CititorService;
 import com.pao.project.service.ImprumutService;
 
+import java.sql.SQLException;
+import java.util.Map;
+
 public class Main {
-    public static void main(String[] args) {
-        Biblioteca biblioteca = new Biblioteca("Biblioteca Centrala");
+    public static void main(String[] args) throws SQLException {
+        AutorService autorService = AutorService.getInstance();
         CarteService carteService = CarteService.getInstance();
         CititorService cititorService = CititorService.getInstance();
         ImprumutService imprumutService = ImprumutService.getInstance();
 
-        Bibliotecar bibliotecar = new Bibliotecar("Maria Popescu", 4500, "Inregistrare");
-        System.out.println(bibliotecar);
-
+        System.out.println("=== 1. Adaugare Autori ===");
         Autor autor1 = new Autor("Mihai Eminescu");
         Autor autor2 = new Autor("Ion Creanga");
+        autorService.adaugaAutor(autor1);
+        autorService.adaugaAutor(autor2);
 
-        Sectiune sectiunePoezie = new Sectiune("Poezie");
-        Sectiune sectiuneProza = new Sectiune("Proza");
-
-        Carte carte1 = new Carte("Poezii", autor1, new ISBN("ISBN-001"));
-        Carte carte2 = new Carte("Luceafarul", autor1, new ISBN("ISBN-002"));
-        Carte carte3 = new Carte("Amintiri din copilarie", autor2, new ISBN("ISBN-003"));
+        System.out.println("\n=== 2. Adaugare Carti ===");
+        Carte carte1 = new Carte("Poezii", autor1, new ISBN("111-222"));
+        carte1.setAutorId(autor1.getId());
+        
+        Carte carte2 = new Carte("Amintiri din Copilarie", autor2, new ISBN("333-444"));
+        carte2.setAutorId(autor2.getId());
 
         carteService.adaugaCarte(carte1);
         carteService.adaugaCarte(carte2);
-        carteService.adaugaCarte(carte3);
 
-        biblioteca.adaugaCarte(carte1);
-        biblioteca.adaugaCarte(carte2);
-        biblioteca.adaugaCarte(carte3);
-
-        Carte carteTemp = new Carte("Povestea lui Harap-Alb", autor2, new ISBN("ISBN-999"));
-        carteService.adaugaCarte(carteTemp);
-        carteService.stergeCarte("Povestea lui Harap-Alb");
-
-        System.out.println(carteService.cautaCarte("Poezii"));
-
-        for (Carte carte : carteService.listeazaCarti()) {
-            System.out.println(carte);
-        }
-
-        Cititor cititor1 = new Cititor(1, "Ana");
-        Cititor cititor2 = new Cititor(2, "Mihai");
+        System.out.println("\n=== 3. Adaugare Cititori ===");
+        Cititor cititor1 = new Cititor(1, "Ana Maria");
+        Cititor cititor2 = new Cititor(2, "Andrei Popescu");
         cititorService.adaugaCititor(cititor1);
         cititorService.adaugaCititor(cititor2);
 
-        biblioteca.adaugaCititor(cititor1);
-        biblioteca.adaugaCititor(cititor2);
-
-        Cititor cititorTemp = new Cititor(99, "Temp");
-        cititorService.adaugaCititor(cititorTemp);
-        cititorService.stergeCititor(99);
-
+        System.out.println("\n=== 4. TRANZACTIE: Imprumutare Carte ===");
         try {
-            cititorService.cautaDupaId(99);
-        } catch (CititorNegasitException e) {
-            System.out.println(e.getMessage());
+            imprumutService.imprumuta(carte1, cititor1);
+            System.out.println("Cartea " + carte1.getTitlu() + " a fost imprumutata cu succes!");
+        } catch (Exception e) {
+            System.out.println("Eroare la imprumut: " + e.getMessage());
         }
 
-        imprumutService.imprumuta(carte1, cititor1);
-        biblioteca.adaugaImprumut(new Imprumut(carte1, cititor1));
+        System.out.println("\n=== 5. Afisare Imprumuturi Active (JOIN 3) ===");
+        imprumutService.afiseazaImprumuturiActive();
 
+        System.out.println("\n=== 6. Afisare Carti + Autori (JOIN 2) ===");
+        CarteRepository carteRepo = new CarteRepository();
+        for(String c : carteRepo.getCartiCuNumeAutori()) {
+            System.out.println(c);
+        }
+
+        System.out.println("\n=== 7. Afisare Statistici Cititori (JOIN 1) ===");
+        CititorRepository cititorRepo = new CititorRepository();
+        for(Map.Entry<String, Integer> entry : cititorRepo.getCititoriCuNumarImprumuturi().entrySet()) {
+            System.out.println("Cititor: " + entry.getKey() + " | Imprumuturi active: " + entry.getValue());
+        }
+
+        System.out.println("\n=== 8. Returnare Carte ===");
         imprumutService.returneaza(carte1);
+        System.out.println("Cartea a fost returnata!");
+        System.out.println("Status imprumuturi acum:");
+        imprumutService.afiseazaImprumuturiActive(); // Va fi gol
 
-        for (Imprumut imprumut : imprumutService.imprumuturiPentruCititor(1)) {
-            System.out.println(imprumut);
-        }
-
-        System.out.println(carte1.getTitlu() + " disponibil? " + carte1.isDisponibila());
-
-        try {
-            imprumutService.imprumuta(carte2, cititor1);
-            imprumutService.imprumuta(carte2, cititor2);
-        } catch (CarteNedisponibilaException e) {
-            System.out.println(e.getMessage());
-        }
-
-        sectiunePoezie.adaugaCarte(carte1);
-        sectiunePoezie.adaugaCarte(carte2);
-        sectiuneProza.adaugaCarte(carte3);
-
-        biblioteca.adaugaSectiune(sectiunePoezie);
-        biblioteca.adaugaSectiune(sectiuneProza);
-
-        System.out.println(biblioteca);
+        System.out.println("\n=== 9 & 10. Stergere (Clean-up) ===");
+        carteService.stergeCarte(carte2.getId());
+        cititorService.stergeCititor(cititor2.getId());
+        System.out.println("Stergerile au fost logate in Audit.");
+        
+        System.out.println("\nProiect Etapa 2 finalizat cu succes! Verifica fisierul audit.csv.");
     }
 }
